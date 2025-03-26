@@ -245,12 +245,36 @@ public class CuckooHash<K, V> {
 	 */
 
  	public void put(K key, V value) {
+		Bucket<K, V> newBucket = new Bucket<>(key, value);
+		int pos1 = hash1(key);
+		int pos2 = hash2(key);
 
-		// ADD YOUR CODE HERE - DO NOT FORGET TO ADD YOUR NAME AT TOP OF FILE.
-		// Also make sure you read this method's prologue above, it should help
-		// you. Especially the two HINTS in the prologue.
+		if (table[pos1] != null && table[pos1].getBucKey().equals(key) && table[pos1].getValue().equals(value)) { // check if equal key already exists
+			return; 
+		}
+		if (table[pos2] != null && table[pos2].getBucKey().equals(key) && table[pos2].getValue().equals(value)) {
+			return;
+		}
+		for (int attempts = 0; attempts < CAPACITY; attempts++) { // Inserts at first hash
+			if (table[pos1] == null) {
+				table[pos1] = newBucket;
+				return;
+			}
+			
+			Bucket<K, V> displaced = table[pos1];
+			table[pos1] = newBucket;
+			newBucket = displaced;
 
-		return;
+			pos1 = (pos1 == hash1(newBucket.getBucKey())) ? hash2(newBucket.getBucKey()) : hash1(newBucket.getBucKey());
+
+			if (table[pos1] == null) {
+				table[pos1] = newBucket;
+				return;
+			}
+		}
+		
+		rehash();
+		put(newBucket.getBucKey(), newBucket.getValue()); 
 	}
 
 
